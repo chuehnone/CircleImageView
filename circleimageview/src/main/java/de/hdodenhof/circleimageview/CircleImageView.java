@@ -74,6 +74,7 @@ public class CircleImageView extends ImageView {
     private boolean mSetupPending;
     private boolean mBorderOverlay;
     private boolean mDisableCircularTransformation;
+    private boolean mShowReflectionShadow;
 
     public CircleImageView(Context context) {
         super(context);
@@ -140,12 +141,35 @@ public class CircleImageView extends ImageView {
             return;
         }
 
-        if (mFillColor != Color.TRANSPARENT) {
-            canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mFillPaint);
+        int decreaseY = 0;
+        if (canvas.getHeight() > canvas.getWidth()) {
+            decreaseY = (canvas.getHeight() - canvas.getWidth())/4;
         }
-        canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY(), mDrawableRadius, mBitmapPaint);
+
+        if (mFillColor != Color.TRANSPARENT) {
+            canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY()-decreaseY, mDrawableRadius, mFillPaint);
+        }
+        canvas.drawCircle(mDrawableRect.centerX(), mDrawableRect.centerY()-decreaseY, mDrawableRadius, mBitmapPaint);
         if (mBorderWidth > 0) {
-            canvas.drawCircle(mBorderRect.centerX(), mBorderRect.centerY(), mBorderRadius, mBorderPaint);
+            canvas.drawCircle(mBorderRect.centerX(), mBorderRect.centerY()-decreaseY, mBorderRadius, mBorderPaint);
+        }
+
+        if (mShowReflectionShadow) {
+            float width = mDrawableRect.right - mDrawableRect.left;
+            float height = mDrawableRect.bottom - mDrawableRect.top;
+
+            float left = mDrawableRect.left + width/8;
+            float top = mDrawableRect.bottom - decreaseY + height/8;
+            float right = mDrawableRect.right - width/8;
+            float bottom = mDrawableRect.bottom - decreaseY + height/4;
+
+            // Set shadow paint
+            Paint paint = new Paint();
+            paint.setColor(Color.parseColor("#666666"));
+            paint.setShadowLayer(5.0f, 0.0f, 2.0f, 0xFF333333);
+            setLayerType(LAYER_TYPE_SOFTWARE, paint);
+
+            canvas.drawOval(new RectF(left, top, right, bottom), paint);
         }
     }
 
@@ -435,4 +459,7 @@ public class CircleImageView extends ImageView {
         mBitmapShader.setLocalMatrix(mShaderMatrix);
     }
 
+    public void setReflectionShadow(boolean isShow) {
+        mShowReflectionShadow = isShow;
+    }
 }
